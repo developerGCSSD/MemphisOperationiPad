@@ -26,7 +26,6 @@ const LoginScreen = () => {
     uri: 'https://images.wuzzuf-data.net/files/company_logo/Memphis-Tours-Egypt-19649-1522166978-og.jpg',
   };
   const handleLogin = () => {
-    // Perform login (no validation as per request)
     console.log('Username:', username);
     console.log('Password:', password);
   };
