@@ -15,8 +15,10 @@ import {
 } from 'react-native';
 import InputField from '../components/inputFields';
 import LoginButton from '../components/loginButton';
+import {useNavigation} from '@react-navigation/native';
 
 const LoginScreen = () => {
+  const navigation = useNavigation();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const image = {
@@ -28,6 +30,7 @@ const LoginScreen = () => {
   const handleLogin = () => {
     console.log('Username:', username);
     console.log('Password:', password);
+    navigation.navigate('Dashboard');
   };
 
   return (
