@@ -34,7 +34,7 @@ const DAYS = [
 const CELL_DATA = Array.from({length: 10}, (_, i) => ({
   id: i,
   fileName: `#10222/${i + 1}`,
-  duration: '1/4 – 20/4',
+  duration: '1/4/2025 – 20/4/2025',
   people: `${10 + i}`,
 }));
 
@@ -45,7 +45,9 @@ export default function PendingFiles() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [currentDayIndex, setCurrentDayIndex] = useState(0);
-  const [startOfWeek, setStartOfWeek] = useState(moment().startOf('week'));
+  // const [startOfWeek, setStartOfWeek] = useState(moment().startOf('week'));
+  const [startOfWeek, setStartOfWeek] = useState(moment());
+
   const today = moment().format('D/M/YYYY');
   const navigation = useNavigation();
 
@@ -76,18 +78,33 @@ export default function PendingFiles() {
     navigation.navigate('AssignFiles', {selectedFiles});
     console.log(selectedFiles);
   };
-
+  //& function to get the days of the weeks start from the current day
   const getWeekDays = () => {
     const days = [];
+    const startDay = startOfWeek; // Use startOfWeek, not moment()
     for (let i = 0; i < 7; i++) {
-      const day = moment(startOfWeek).add(i, 'days');
+      const day = moment(startDay).add(i, 'days');
       days.push({
-        day: day.format('dddd'), // Sunday, Monday, etc.
-        date: day.format('D/M/YYYY'), // 6/4/2025
+        day: day.format('dddd'),
+        date: day.format('D/M/YYYY'),
       });
     }
     return days;
   };
+
+  //& function to start the dates on the table 5 days ahead the current day
+  // const getWeekDays = () => {
+  //   const days = [];
+  //   const startDay = moment().add(5, 'days'); // 5 days ahead of today
+  //   for (let i = 0; i < 7; i++) {
+  //     const day = moment(startDay).add(i, 'days');
+  //     days.push({
+  //       day: day.format('dddd'),
+  //       date: day.format('D/M/YYYY'),
+  //     });
+  //   }
+  //   return days;
+  // };
 
   const goToPrevious = () => {
     setStartOfWeek(prev => moment(prev).subtract(4, 'days'));
@@ -147,12 +164,12 @@ export default function PendingFiles() {
       {/* Days Navigation */}
       <View style={styles.dayNavContainer}>
         <TouchableOpacity style={styles.arrowButton} onPress={goToPrevious}>
-          <Icon name="chevron-left" size={30} color="#333" />
+          <Icon name="chevron-left" size={30} color="#007bff" />
         </TouchableOpacity>
 
         <FlatList
           horizontal
-          data={getWeekDays().slice(0, 5)}
+          data={getWeekDays().slice(0, 4)}
           keyExtractor={item => item.date}
           renderItem={({item}) => {
             const isToday = item.date === today;
@@ -183,7 +200,9 @@ export default function PendingFiles() {
                           size={16}
                           color="#00aaff"
                         />
-                        <Text style={styles.cellText}>{fileItem.duration}</Text>
+                        <Text style={styles.cellText} numberOfLines={1}>
+                          {fileItem.duration}
+                        </Text>
                       </View>
                       <View style={styles.cellRow}>
                         <Icon name="account-group" size={16} color="#ff6600" />
@@ -205,7 +224,7 @@ export default function PendingFiles() {
         />
 
         <TouchableOpacity style={styles.arrowButton} onPress={goToNext}>
-          <Icon name="chevron-right" size={30} color="#333" />
+          <Icon name="chevron-right" size={30} color="#007bff" />
         </TouchableOpacity>
       </View>
 
@@ -292,7 +311,7 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   column: {
-    width: windowWidth / 6,
+    width: windowWidth / 4.7,
     padding: 8,
     borderRightWidth: 1,
     borderColor: '#eee',
@@ -373,12 +392,11 @@ const styles = StyleSheet.create({
   },
   arrowButton: {
     padding: 10,
-    backgroundColor: '#f0f0f0',
+    backgroundColor: '#e6f0ff',
     borderRadius: 50,
   },
   highlightedDay: {
     color: '#007bff',
     fontWeight: 'bold',
-    fontSize: 16,
   },
 });
