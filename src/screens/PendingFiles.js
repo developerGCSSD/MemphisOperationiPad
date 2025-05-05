@@ -1,3 +1,4 @@
+/* eslint-disable react-native/no-inline-styles */
 import {useNavigation} from '@react-navigation/native';
 import React, {useState} from 'react';
 import {
@@ -5,12 +6,14 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  ScrollView,
   FlatList,
   Dimensions,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import moment from 'moment';
+import WeeklyCalendar from '../components/weeklyCalendar';
+import FileCell from '../components/fileCell';
+import HeaderControls from '../components/headerControl';
 
 const LANGUAGES = [
   'English',
@@ -19,16 +22,6 @@ const LANGUAGES = [
   'German',
   'Hindi',
   'Chinese',
-];
-
-const DAYS = [
-  {day: 'Sunday', date: '6/4/2025'},
-  {day: 'Monday', date: '7/4/2025'},
-  {day: 'Tuesday', date: '8/4/2025'},
-  {day: 'Wednesday', date: '9/4/2025'},
-  {day: 'Thursday', date: '10/4/2025'},
-  {day: 'Friday', date: '11/4/2025'},
-  {day: 'Saturday', date: '12/4/2025'},
 ];
 
 const CELL_DATA = Array.from({length: 10}, (_, i) => ({
@@ -45,8 +38,8 @@ export default function PendingFiles() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [currentDayIndex, setCurrentDayIndex] = useState(0);
-  // const [startOfWeek, setStartOfWeek] = useState(moment().startOf('week'));
   const [startOfWeek, setStartOfWeek] = useState(moment());
+  const [selectedDate, setSelectedDate] = useState(null); // New state to store selected date
 
   const today = moment().format('D/M/YYYY');
   const navigation = useNavigation();
@@ -57,9 +50,12 @@ export default function PendingFiles() {
   };
 
   const handleSeeAll = (day, index) => {
-    console.log(
-      `See all pressed for ${day.day} (${day.date}), column index: ${index}`,
-    );
+    navigation.navigate('filesPerDay', {
+      day,
+      files: CELL_DATA,
+      selectedFiles,
+      toggleFileSelection,
+    });
   };
 
   const toggleFileSelection = (day, fileId) => {
@@ -78,88 +74,59 @@ export default function PendingFiles() {
     navigation.navigate('AssignFiles', {selectedFiles});
     console.log(selectedFiles);
   };
-  //& function to get the days of the weeks start from the current day
+
   const getWeekDays = () => {
     const days = [];
-    const startDay = startOfWeek; // Use startOfWeek, not moment()
-    for (let i = 0; i < 7; i++) {
-      const day = moment(startDay).add(i, 'days');
+    const startDay = startOfWeek; // Get the starting day of the week
+    const orderedDays = selectedDate
+      ? [
+          selectedDate,
+          ...Array.from({length: 6}, (_, i) =>
+            moment(selectedDate).add(i + 1, 'days'),
+          ),
+        ]
+      : Array.from({length: 7}, (_, i) => moment(startDay).add(i, 'days'));
+
+    orderedDays.forEach(day => {
       days.push({
         day: day.format('dddd'),
         date: day.format('D/M/YYYY'),
       });
-    }
+    });
     return days;
   };
 
-  //& function to start the dates on the table 5 days ahead the current day
-  // const getWeekDays = () => {
-  //   const days = [];
-  //   const startDay = moment().add(5, 'days'); // 5 days ahead of today
-  //   for (let i = 0; i < 7; i++) {
-  //     const day = moment(startDay).add(i, 'days');
-  //     days.push({
-  //       day: day.format('dddd'),
-  //       date: day.format('D/M/YYYY'),
-  //     });
-  //   }
-  //   return days;
-  // };
-
   const goToPrevious = () => {
-    setStartOfWeek(prev => moment(prev).subtract(4, 'days'));
+    const currentFirstDate = selectedDate || startOfWeek;
+    const newDate = moment(currentFirstDate, 'D/M/YYYY').subtract(4, 'days');
+    setStartOfWeek(newDate);
+    setSelectedDate(newDate);
   };
 
   const goToNext = () => {
-    setStartOfWeek(prev => moment(prev).add(4, 'days'));
+    const currentFirstDate = selectedDate || startOfWeek;
+    const newDate = moment(currentFirstDate, 'D/M/YYYY').add(4, 'days');
+    setStartOfWeek(newDate);
+    setSelectedDate(newDate);
+  };
+
+  const handleDateSelect = date => {
+    setSelectedDate(date); // Store the selected date
+    setStartOfWeek(moment(date).startOf('week')); // Set the startOfWeek to the selected date's week
   };
 
   return (
     <View style={{flex: 1, padding: 10, backgroundColor: 'white'}}>
       {/* Dropdown & Labels Row */}
-      <View style={styles.topRow}>
-        <View style={styles.leftContainer}>
-          <TouchableOpacity
-            style={styles.dropdown}
-            onPress={() => setDropdownOpen(!dropdownOpen)}>
-            <Text style={styles.dropdownText}>{selectedLanguage}</Text>
-            <Icon
-              name={dropdownOpen ? 'chevron-up' : 'chevron-down'}
-              size={20}
-              color="#555"
-            />
-          </TouchableOpacity>
+      <HeaderControls
+        selectedLanguage={selectedLanguage}
+        dropdownOpen={dropdownOpen}
+        onToggleDropdown={() => setDropdownOpen(prev => !prev)}
+        onSelectLanguage={handleSelect}
+      />
 
-          {dropdownOpen && (
-            <View style={styles.dropdownList}>
-              {LANGUAGES.map(lang => (
-                <TouchableOpacity
-                  key={lang}
-                  style={styles.dropdownItem}
-                  onPress={() => handleSelect(lang)}>
-                  <Text style={styles.dropdownItemText}>{lang}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          )}
-        </View>
-
-        {/* Icon Labels */}
-        <View style={styles.labelsContainer}>
-          <View style={styles.label}>
-            <Icon name="folder" size={18} color="#f4c430" />
-            <Text style={styles.labelText}>File Name</Text>
-          </View>
-          <View style={styles.label}>
-            <Icon name="clock-time-four-outline" size={18} color="#00aaff" />
-            <Text style={styles.labelText}>Duration</Text>
-          </View>
-          <View style={styles.label}>
-            <Icon name="account-group" size={18} color="#ff6600" />
-            <Text style={styles.labelText}>Number Of People</Text>
-          </View>
-        </View>
-      </View>
+      {/* Calendar View */}
+      <WeeklyCalendar onSelectDate={handleDateSelect} />
 
       {/* Days Navigation */}
       <View style={styles.dayNavContainer}>
@@ -171,11 +138,17 @@ export default function PendingFiles() {
           horizontal
           data={getWeekDays().slice(0, 4)}
           keyExtractor={item => item.date}
-          renderItem={({item}) => {
+          renderItem={({item, index}) => {
             const isToday = item.date === today;
+            const isLastColumn = index === 3; // because you have 4 items: index 0,1,2,3
 
             return (
-              <View style={[styles.column, isToday && styles.todayColumn]}>
+              <View
+                style={[
+                  styles.column,
+                  isToday && styles.todayColumn,
+                  isLastColumn && {borderRightWidth: 0}, // remove right border for last column
+                ]}>
                 <View style={styles.header}>
                   <Text style={[styles.day, isToday && styles.highlightedDay]}>
                     {item.day}
@@ -183,32 +156,16 @@ export default function PendingFiles() {
                   <Text style={styles.date}>{item.date}</Text>
                 </View>
 
-                {CELL_DATA.map((fileItem, rowIndex) => {
+                {CELL_DATA.slice(0, 10).map((fileItem, rowIndex) => {
                   const selected = isSelected(item, fileItem.id);
                   return (
-                    <TouchableOpacity
+                    <FileCell
                       key={rowIndex}
-                      style={[styles.cell, selected && styles.selectedCell]}
-                      onPress={() => toggleFileSelection(item, fileItem.id)}>
-                      <View style={styles.cellRow}>
-                        <Icon name="folder" size={16} color="#f4c430" />
-                        <Text style={styles.cellText}>{fileItem.fileName}</Text>
-                      </View>
-                      <View style={styles.cellRow}>
-                        <Icon
-                          name="clock-time-four-outline"
-                          size={16}
-                          color="#00aaff"
-                        />
-                        <Text style={styles.cellText} numberOfLines={1}>
-                          {fileItem.duration}
-                        </Text>
-                      </View>
-                      <View style={styles.cellRow}>
-                        <Icon name="account-group" size={16} color="#ff6600" />
-                        <Text style={styles.cellText}>{fileItem.people}</Text>
-                      </View>
-                    </TouchableOpacity>
+                      day={item}
+                      fileItem={fileItem}
+                      isSelected={selected}
+                      onToggleSelect={toggleFileSelection}
+                    />
                   );
                 })}
 
@@ -243,7 +200,6 @@ export default function PendingFiles() {
     </View>
   );
 }
-
 const styles = StyleSheet.create({
   topRow: {
     flexDirection: 'row',
@@ -374,7 +330,7 @@ const styles = StyleSheet.create({
   nextButtonWrapper: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
-    margin: 20,
+    margin: 10,
   },
   nextButtonText: {
     color: '#fff',
@@ -382,7 +338,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
   },
   nextButtonDisabled: {
-    backgroundColor: '#ccc', // light gray to indicate disabled
+    backgroundColor: '#ccc',
   },
   dayNavContainer: {
     flexDirection: 'row',
@@ -398,5 +354,15 @@ const styles = StyleSheet.create({
   highlightedDay: {
     color: '#007bff',
     fontWeight: 'bold',
+  },
+  languageBranchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 20,
+  },
+  branchLabel: {
+    fontSize: 16,
+    color: '#007bff',
+    fontWeight: '600',
   },
 });

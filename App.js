@@ -5,6 +5,7 @@ import LoginScreen from './src/screens/Login';
 import Dashboard from './src/screens/Dashboard';
 import PendingFiles from './src/screens/PendingFiles';
 import AssignLeaderAndGuide from './src/screens/AssignLeaderAndGuide';
+import FilesPerDay from './src/screens/FilesPerDay';
 
 const Stack = createNativeStackNavigator();
 
@@ -57,6 +58,23 @@ const App = () => {
           options={{
             headerShown: true,
             title: 'Assign Leader And Guide',
+            headerTintColor: '#FFFFFF',
+            headerStyle: {
+              backgroundColor: '#27548A',
+            },
+            headerTitleStyle: {
+              color: '#FFFFFF',
+              fontSize: 22,
+              fontWeight: 'bold',
+            },
+          }}
+        />
+        <Stack.Screen
+          name="filesPerDay"
+          component={FilesPerDay}
+          options={{
+            headerShown: true,
+            title: '',
             headerTintColor: '#FFFFFF',
             headerStyle: {
               backgroundColor: '#27548A',
