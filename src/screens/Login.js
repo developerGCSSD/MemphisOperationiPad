@@ -16,6 +16,8 @@ import {
 import InputField from '../components/inputFields';
 import LoginButton from '../components/loginButton';
 import {useNavigation} from '@react-navigation/native';
+import {loginUser} from '../redux/reducers/auth';
+import {useDispatch, useSelector} from 'react-redux';
 
 const LoginScreen = () => {
   const navigation = useNavigation();
@@ -27,10 +29,24 @@ const LoginScreen = () => {
   const logo = {
     uri: 'https://images.wuzzuf-data.net/files/company_logo/Memphis-Tours-Egypt-19649-1522166978-og.jpg',
   };
+  const dispatch = useDispatch();
+  const {loading, error, user} = useSelector(state => state.auth);
+
   const handleLogin = () => {
-    console.log('Username:', username);
-    console.log('Password:', password);
-    navigation.navigate('Dashboard');
+    if (!username.trim() || !password.trim()) {
+      alert('Please enter both username and password');
+      return;
+    }
+
+    dispatch(loginUser({username, password}))
+      .unwrap()
+      .then(() => {
+        navigation.navigate('Dashboard');
+      })
+      .catch(err => {
+        console.log('Login failed:', err);
+        alert('Login failed. Please check your credentials.');
+      });
   };
 
   return (
@@ -69,8 +85,7 @@ const LoginScreen = () => {
                   onChangeText={setPassword}
                 />
               </View>
-
-              <LoginButton onPress={handleLogin} />
+              <LoginButton onPress={handleLogin} loading={loading} />
             </View>
           </ScrollView>
         </ImageBackground>
