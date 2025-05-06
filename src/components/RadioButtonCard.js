@@ -6,6 +6,10 @@ export default function RadioButtonCard({
   selectedOption,
   setSelectedOption,
 }) {
+  if (!options || options.length === 0) {
+    return <Text>No options available</Text>; // Display a message if options are empty
+  }
+
   return (
     <FlatList
       data={options}
