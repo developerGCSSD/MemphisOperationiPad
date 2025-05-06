@@ -1,39 +1,43 @@
-import React, {useState} from 'react';
-import {View, Text, StyleSheet, TouchableOpacity} from 'react-native';
+import React, {useState, useEffect} from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ActivityIndicator,
+} from 'react-native';
 import {useRoute, useNavigation} from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import RadioButtonCard from '../components/RadioButtonCard';
+import {useDispatch, useSelector} from 'react-redux';
+import {fetchAssignments} from '../redux/reducers/assignmentLists'; // Import your Redux slice action
 
 export default function AssignLeaderAndGuide() {
   const route = useRoute();
-  const navigation = useNavigation(); // Navigation hook to go back
+  const navigation = useNavigation();
   const {selectedFiles} = route.params;
   const [selectedLeader, setSelectedLeader] = useState(null);
   const [selectedGuide, setSelectedGuide] = useState(null);
 
-  const leaderOptions = [
-    'Ali Mohamed',
-    'Mohamed Ahmed',
-    'Yara Gamal',
-    'Hassan Mohamed',
-    'John Doe',
-    'Nour Saleh',
-    'Mai Ahmed',
-    'Khaled Elnabawy',
-    'Ramez Galal',
-    'Tamer Ashor',
-  ];
+  const dispatch = useDispatch();
+  const {leaders, guides, loading, error} = useSelector(
+    state => state.assignments,
+  );
 
-  const guideOptions = [
-    'Tamer Hosny',
-    'Angham',
-    'Billie Eilish',
-    'Hamaki',
-    'Carol Smaha',
-    'Carmen Seliman',
-  ];
+  useEffect(() => {
+    dispatch(fetchAssignments('Leader')); // Fetch leaders
+    dispatch(fetchAssignments('Guide')); // Fetch guides
+  }, [dispatch]);
 
   const isAssignEnabled = selectedLeader !== null && selectedGuide !== null;
+
+  if (loading) {
+    return <ActivityIndicator size="large" color="#0000ff" />;
+  }
+
+  if (error) {
+    return <Text>{`Error: ${error}`}</Text>;
+  }
 
   return (
     <View style={styles.container}>
@@ -54,7 +58,7 @@ export default function AssignLeaderAndGuide() {
       <View>
         <Text style={styles.sectionTitle}>Select Leader</Text>
         <RadioButtonCard
-          options={leaderOptions}
+          options={leaders} // Use the leaders from Redux state
           selectedOption={selectedLeader}
           setSelectedOption={setSelectedLeader}
         />
@@ -64,7 +68,7 @@ export default function AssignLeaderAndGuide() {
       <View>
         <Text style={styles.sectionTitle}>Select Guide</Text>
         <RadioButtonCard
-          options={guideOptions}
+          options={guides} // Use the guides from Redux state
           selectedOption={selectedGuide}
           setSelectedOption={setSelectedGuide}
         />

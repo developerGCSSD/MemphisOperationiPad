@@ -1,6 +1,6 @@
 import {createSlice, createAsyncThunk} from '@reduxjs/toolkit';
 import axios from 'axios';
-
+import {saveToken} from '../../storage/authData';
 export const loginUser = createAsyncThunk(
   'auth/loginUser',
   async ({username, password}, thunkAPI) => {
@@ -14,6 +14,7 @@ export const loginUser = createAsyncThunk(
           },
         },
       );
+      console.log('tttttt', response.data);
       return response.data;
     } catch (error) {
       return thunkAPI.rejectWithValue(error.response?.data || error.message);
@@ -42,6 +43,7 @@ const authSlice = createSlice({
       state.loading = false;
       state.error = false;
       state.user = action.payload;
+      saveToken(state.user);
     });
     builder.addCase(loginUser.pending, state => {
       state.loading = true;
