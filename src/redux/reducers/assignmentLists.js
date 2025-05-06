@@ -1,33 +1,45 @@
 import {createSlice, createAsyncThunk} from '@reduxjs/toolkit';
-import axios from 'axios';
 import {retrieveUser} from '../../storage/authData';
 
-// API call to fetch assignment data based on assignment_type
+// API call to fetch assignment data based on assignment_type using fetch
 const fetchAssignmentList = async assignmentType => {
   try {
     const user = await retrieveUser();
     console.log('Retrieved user:', user.token);
+    console.log('Request Headers:', {
+      JWToken: user.token,
+    });
+    console.log('type', assignmentType);
 
     if (!user?.token) {
       console.error('❌ Token not found');
       throw new Error('Token not found');
     }
 
-    const response = await axios.get(
+    const response = await fetch(
       `https://staging.tangramerp.com/api-operation/assignments-list/${assignmentType}`,
       {
+        method: 'GET',
         headers: {
           JWToken: user.token,
-          //   Authorization: `Bearer ${user.token}`,
+          'Content-Type': 'application/json',
+          'Accept-Encoding': 'gzip, deflate, br',
         },
       },
     );
 
-    console.log('✅ API Response:', response.data);
-    return response.data;
+    if (!response.ok) {
+      const errorData = await response.text();
+      console.error('❌ API Error:', errorData);
+      throw new Error(`HTTP ${response.status} - ${errorData}`);
+    }
+
+    const data = await response.json();
+    console.log('✅ API Response:', data);
+    return data;
   } catch (error) {
-    console.error('❌ API Error:', error);
-    throw error.response ? error.response.data : 'Error fetching data';
+    console.error('❌ Fetch Error:', error);
+    throw error;
   }
 };
 
@@ -37,6 +49,7 @@ export const fetchAssignments = createAsyncThunk(
   async (assignmentType, {rejectWithValue}) => {
     try {
       const data = await fetchAssignmentList(assignmentType);
+      console.log('ppppppppp', data);
       return data; // Return the fetched data
     } catch (error) {
       return rejectWithValue(error); // Return the error if failed
@@ -61,10 +74,15 @@ const assignmentsSlice = createSlice({
       })
       .addCase(fetchAssignments.fulfilled, (state, action) => {
         state.loading = false;
+
+        const transformedData = Object.entries(action.payload).map(
+          ([id, name]) => ({id, name: name.trim()}),
+        );
+
         if (action.meta.arg === 'Leader') {
-          state.leaders = action.payload;
+          state.leaders = transformedData;
         } else if (action.meta.arg === 'Guide') {
-          state.guides = action.payload;
+          state.guides = transformedData;
         }
       })
       .addCase(fetchAssignments.rejected, (state, action) => {

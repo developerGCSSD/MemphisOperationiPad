@@ -5,6 +5,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   ActivityIndicator,
+  ScrollView,
 } from 'react-native';
 import {useRoute, useNavigation} from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -41,59 +42,55 @@ export default function AssignLeaderAndGuide() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Selected Files</Text>
-      {/* File List (wrapped rows instead of horizontal scroll) */}
-      <View style={styles.fileListWrapper}>
-        {selectedFiles.map((item, index) => (
-          <View key={`${item}-${index}`} style={styles.cardWrapper}>
-            <View style={styles.card}>
-              <Icon name="folder" size={16} color="#f4c430" />
-              <Text style={styles.cardText}>{item}</Text>
-            </View>
-          </View>
-        ))}
-      </View>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <Text style={styles.title}>Selected Files</Text>
 
-      {/* Leader Selection */}
-      <View>
+        {/* File List */}
+        <View style={styles.fileListWrapper}>
+          {selectedFiles.map((item, index) => (
+            <View key={`${item}-${index}`} style={styles.cardWrapper}>
+              <View style={styles.card}>
+                <Icon name="folder" size={16} color="#f4c430" />
+                <Text style={styles.cardText}>{item}</Text>
+              </View>
+            </View>
+          ))}
+        </View>
+
+        {/* Leader Selection */}
         <Text style={styles.sectionTitle}>Select Leader</Text>
         <RadioButtonCard
-          options={leaders} // Use the leaders from Redux state
+          options={leaders}
           selectedOption={selectedLeader}
           setSelectedOption={setSelectedLeader}
         />
-      </View>
 
-      {/* Guide Selection */}
-      <View>
+        {/* Guide Selection */}
         <Text style={styles.sectionTitle}>Select Guide</Text>
         <RadioButtonCard
-          options={guides} // Use the guides from Redux state
+          options={guides}
           selectedOption={selectedGuide}
           setSelectedOption={setSelectedGuide}
         />
-      </View>
 
-      {/* Button Container */}
-      <View style={styles.buttonContainer}>
-        {/* Cancel Button */}
-        <TouchableOpacity
-          style={[styles.nextButton, styles.cancelButton]}
-          onPress={() => navigation.goBack()} // Navigate back to previous screen
-        >
-          <Text style={styles.nextButtonText}>Cancel</Text>
-        </TouchableOpacity>
+        {/* Buttons at the end */}
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity
+            style={[styles.nextButton, styles.cancelButton]}
+            onPress={() => navigation.goBack()}>
+            <Text style={styles.nextButtonText}>Cancel</Text>
+          </TouchableOpacity>
 
-        {/* Assign Button */}
-        <TouchableOpacity
-          style={[
-            styles.nextButton,
-            {backgroundColor: isAssignEnabled ? '#27548A' : '#d3d3d3'},
-          ]}
-          disabled={!isAssignEnabled}>
-          <Text style={styles.nextButtonText}>Assign</Text>
-        </TouchableOpacity>
-      </View>
+          <TouchableOpacity
+            style={[
+              styles.nextButton,
+              {backgroundColor: isAssignEnabled ? '#27548A' : '#d3d3d3'},
+            ]}
+            disabled={!isAssignEnabled}>
+            <Text style={styles.nextButtonText}>Assign</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
     </View>
   );
 }
@@ -160,11 +157,14 @@ const styles = StyleSheet.create({
   buttonContainer: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
-    position: 'absolute',
-    bottom: '10%',
-    right: 16,
+    marginTop: 30,
+    marginBottom: 40,
+    gap: 10,
   },
   cancelButton: {
     backgroundColor: '#C5172E', // Background color for Cancel button
+  },
+  scrollContent: {
+    paddingBottom: 40,
   },
 });
