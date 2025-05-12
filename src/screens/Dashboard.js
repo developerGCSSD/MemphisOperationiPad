@@ -12,7 +12,7 @@ export default function Dashboard({navigation}) {
   return (
     <ScrollView style={styles.scroll} contentContainerStyle={styles.container}>
       <View style={styles.column}>
-        <ClickableCard imageSource={fileJounry} label={'File Journy'} />
+        <ClickableCard imageSource={fileJounry} label={'File Journey'} />
         <ClickableCard
           imageSource={filePending}
           label={'Files Assignment'}
