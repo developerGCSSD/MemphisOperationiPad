@@ -3,6 +3,7 @@ import {View, Text, TouchableOpacity, StyleSheet} from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {useSelector, useDispatch} from 'react-redux';
 import {fetchLanguages} from '../redux/reducers/languagesList';
+import {retrieveUser} from '../storage/authData';
 
 export default function HeaderControls({
   selectedLanguage,
@@ -10,6 +11,7 @@ export default function HeaderControls({
   onToggleDropdown,
   onSelectLanguage,
 }) {
+  const user = retrieveUser();
   const dispatch = useDispatch();
   const {list: languageList, loading} = useSelector(state => state.languages);
 

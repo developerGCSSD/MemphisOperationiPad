@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 
 const screenWidth = Dimensions.get('window').width;
-const cardWidth = screenWidth - 300; // leave some margin on both sides
+const cardWidth = screenWidth - 370; // leave some margin on both sides
 
 const ClickableCard = ({imageSource, label, onPress}) => {
   return (
@@ -28,7 +28,7 @@ const ClickableCard = ({imageSource, label, onPress}) => {
 const styles = StyleSheet.create({
   card: {
     width: cardWidth,
-    height: 200,
+    height: 150,
     backgroundColor: '#fff',
     borderRadius: 20,
     elevation: 5,
@@ -44,8 +44,8 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   image: {
-    width: 80,
-    height: 80,
+    width: 60,
+    height: 60,
   },
   label: {
     fontSize: 16,
