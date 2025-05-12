@@ -1,21 +1,39 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import {View, Text, FlatList, StyleSheet, TouchableOpacity} from 'react-native';
 import FileCell from '../components/fileCell';
 import {useNavigation} from '@react-navigation/native';
 import HeaderControls from '../components/headerControl';
-
+import {fetchLanguages} from '../redux/reducers/languagesList';
+import {useDispatch, useSelector} from 'react-redux';
 export default function FilesPerDay({route}) {
   const {day, files} = route.params;
   const navigation = useNavigation();
 
   // --- Dropdown-related state ---
-  const [selectedLanguage, setSelectedLanguage] = useState('English');
-  const [dropdownOpen, setDropdownOpen] = useState(false);
+  // const [selectedLanguage, setSelectedLanguage] = useState('English');
+  const [selectedLanguage, setSelectedLanguage] = useState(null);
 
-  const handleSelect = lang => {
-    setSelectedLanguage(lang);
-    setDropdownOpen(false);
-  };
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dispatch = useDispatch();
+  const {list: languages, loading} = useSelector(state => state.languages);
+
+  useEffect(() => {
+    dispatch(fetchLanguages());
+  }, [dispatch]);
+
+  useEffect(() => {
+    if (!loading && languages.length > 0 && !selectedLanguage) {
+      const englishLang = languages.find(l => l.language === 'English');
+      if (englishLang) {
+        setSelectedLanguage(englishLang); // ✅ store full object
+      }
+    }
+  }, [loading, languages, selectedLanguage]);
+
+  // const handleSelect = lang => {
+  //   setSelectedLanguage(lang);
+  //   setDropdownOpen(false);
+  // };
 
   // --- File selection state ---
   const [selectedFiles, setSelectedFiles] = useState([]);
@@ -30,7 +48,11 @@ export default function FilesPerDay({route}) {
   const isSelected = fileId => selectedFiles.includes(`${day.date}-${fileId}`);
 
   const handleNext = () => {
-    navigation.navigate('AssignFiles', {selectedFiles});
+    navigation.navigate('AssignFiles', {
+      selectedFiles,
+      selectedLanguageId: selectedLanguage?.id,
+    });
+    console.log('okokokok', selectedFiles, selectedLanguage?.id);
   };
 
   return (
@@ -39,10 +61,12 @@ export default function FilesPerDay({route}) {
       <HeaderControls
         selectedLanguage={selectedLanguage}
         dropdownOpen={dropdownOpen}
-        onToggleDropdown={() => setDropdownOpen(prev => !prev)}
-        onSelectLanguage={handleSelect}
+        onToggleDropdown={() => setDropdownOpen(!dropdownOpen)}
+        onSelectLanguage={lang => {
+          setSelectedLanguage(lang); // ✅ this is now an object like { id: 1, language: 'English' }
+          setDropdownOpen(false);
+        }}
       />
-
       {/* Heading */}
       <Text style={styles.heading}>
         {day.day} - {day.date}

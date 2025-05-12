@@ -16,7 +16,7 @@ import {fetchAssignments} from '../redux/reducers/assignmentLists'; // Import yo
 export default function AssignLeaderAndGuide() {
   const route = useRoute();
   const navigation = useNavigation();
-  const {selectedFiles} = route.params;
+  const {selectedFiles, selectedLanguageId} = route.params;
   const [selectedLeader, setSelectedLeader] = useState(null);
   const [selectedGuide, setSelectedGuide] = useState(null);
 
@@ -26,11 +26,21 @@ export default function AssignLeaderAndGuide() {
   );
 
   useEffect(() => {
-    dispatch(fetchAssignments('Leader')); // Fetch leaders
-    dispatch(fetchAssignments('Guide')); // Fetch guides
-  }, [dispatch]);
+    dispatch(
+      fetchAssignments({
+        assignmentType: 'Leader',
+        languageId: selectedLanguageId,
+      }),
+    );
+    dispatch(
+      fetchAssignments({
+        assignmentType: 'Guide',
+        languageId: selectedLanguageId,
+      }),
+    );
+  }, [dispatch, selectedLanguageId]);
 
-  const isAssignEnabled = selectedLeader !== null && selectedGuide !== null;
+  const isAssignEnabled = selectedLeader !== null || selectedGuide !== null;
 
   if (loading) {
     return <ActivityIndicator size="large" color="#0000ff" />;

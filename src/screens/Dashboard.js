@@ -7,14 +7,20 @@ export default function Dashboard({navigation}) {
   const assignedFiles = require('../assets/folders.png');
   const leader = require('../assets/team-leader.png');
   const guide = require('../assets/tour-guide.png');
-
+  const fileJounry = require('../assets/sending.png');
+  const itemization = require('../assets/classification.png');
   return (
     <ScrollView style={styles.scroll} contentContainerStyle={styles.container}>
       <View style={styles.column}>
+        <ClickableCard imageSource={fileJounry} label={'File Journy'} />
         <ClickableCard
           imageSource={filePending}
-          label={'Files Pending Assignment'}
+          label={'Files Assignment'}
           onPress={() => navigation.navigate('PendingFiles')}
+        />
+        <ClickableCard
+          imageSource={itemization}
+          label={'Itemization Assignment'}
         />
         <ClickableCard imageSource={assignedFiles} label={'Assigned Files'} />
         <ClickableCard

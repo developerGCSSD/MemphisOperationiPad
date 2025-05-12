@@ -1,15 +1,8 @@
-import React from 'react';
+import React, {useEffect} from 'react';
 import {View, Text, TouchableOpacity, StyleSheet} from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-
-const LANGUAGES = [
-  'English',
-  'Spanish',
-  'French',
-  'German',
-  'Hindi',
-  'Chinese',
-];
+import {useSelector, useDispatch} from 'react-redux';
+import {fetchLanguages} from '../redux/reducers/languagesList';
 
 export default function HeaderControls({
   selectedLanguage,
@@ -17,13 +10,24 @@ export default function HeaderControls({
   onToggleDropdown,
   onSelectLanguage,
 }) {
+  const dispatch = useDispatch();
+  const {list: languageList, loading} = useSelector(state => state.languages);
+
+  useEffect(() => {
+    dispatch(fetchLanguages());
+  }, [dispatch]);
+
+  const languages = languageList; // ✅ keeps both id and name
+
   return (
     <View style={styles.topRow}>
       <View style={styles.leftContainer}>
         <View style={styles.languageBranchContainer}>
           {/* Language Dropdown */}
           <TouchableOpacity style={styles.dropdown} onPress={onToggleDropdown}>
-            <Text style={styles.dropdownText}>{selectedLanguage}</Text>
+            <Text style={styles.dropdownText}>
+              {selectedLanguage?.language || 'Select Language'}
+            </Text>
             <Icon
               name={dropdownOpen ? 'chevron-up' : 'chevron-down'}
               size={20}
@@ -37,12 +41,13 @@ export default function HeaderControls({
 
         {dropdownOpen && (
           <View style={styles.dropdownList}>
-            {LANGUAGES.map(lang => (
+            {languages.map(lang => (
               <TouchableOpacity
-                key={lang}
+                key={lang.id}
                 style={styles.dropdownItem}
-                onPress={() => onSelectLanguage(lang)}>
-                <Text style={styles.dropdownItemText}>{lang}</Text>
+                onPress={() => onSelectLanguage(lang)} // ✅ send full object
+              >
+                <Text style={styles.dropdownItemText}>{lang.language}</Text>
               </TouchableOpacity>
             ))}
           </View>

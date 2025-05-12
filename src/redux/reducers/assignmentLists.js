@@ -2,7 +2,7 @@ import {createSlice, createAsyncThunk} from '@reduxjs/toolkit';
 import {retrieveUser} from '../../storage/authData';
 
 // API call to fetch assignment data based on assignment_type using fetch
-const fetchAssignmentList = async assignmentType => {
+const fetchAssignmentList = async (assignmentType, languageId) => {
   try {
     const user = await retrieveUser();
     console.log('Retrieved user:', user.token);
@@ -10,6 +10,7 @@ const fetchAssignmentList = async assignmentType => {
       JWToken: user.token,
     });
     console.log('type', assignmentType);
+    console.log('languageId', languageId);
 
     if (!user?.token) {
       console.error('❌ Token not found');
@@ -17,7 +18,7 @@ const fetchAssignmentList = async assignmentType => {
     }
 
     const response = await fetch(
-      `https://staging.tangramerp.com/api-operation/assignments-list/${assignmentType}`,
+      `https://staging.tangramerp.com/api-operation/assignments-list/${assignmentType}/${languageId}`,
       {
         method: 'GET',
         headers: {
@@ -43,12 +44,12 @@ const fetchAssignmentList = async assignmentType => {
   }
 };
 
-// Thunk to fetch the assignments list based on assignment_type
+// Thunk to fetch the assignments list based on assignment_type and languageId
 export const fetchAssignments = createAsyncThunk(
   'assignments/fetchAssignments',
-  async (assignmentType, {rejectWithValue}) => {
+  async ({assignmentType, languageId}, {rejectWithValue}) => {
     try {
-      const data = await fetchAssignmentList(assignmentType);
+      const data = await fetchAssignmentList(assignmentType, languageId);
       console.log('ppppppppp', data);
       return data; // Return the fetched data
     } catch (error) {
@@ -79,9 +80,11 @@ const assignmentsSlice = createSlice({
           ([id, name]) => ({id, name: name.trim()}),
         );
 
-        if (action.meta.arg === 'Leader') {
+        const {assignmentType} = action.meta.arg;
+
+        if (assignmentType === 'Leader') {
           state.leaders = transformedData;
-        } else if (action.meta.arg === 'Guide') {
+        } else if (assignmentType === 'Guide') {
           state.guides = transformedData;
         }
       })
