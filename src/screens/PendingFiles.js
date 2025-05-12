@@ -1,6 +1,6 @@
 /* eslint-disable react-native/no-inline-styles */
 import {useNavigation} from '@react-navigation/native';
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import {
   View,
   Text,
@@ -14,15 +14,17 @@ import moment from 'moment';
 import WeeklyCalendar from '../components/weeklyCalendar';
 import FileCell from '../components/fileCell';
 import HeaderControls from '../components/headerControl';
+import {useDispatch, useSelector} from 'react-redux';
+import {fetchLanguages} from '../redux/reducers/languagesList';
 
-const LANGUAGES = [
-  'English',
-  'Spanish',
-  'French',
-  'German',
-  'Hindi',
-  'Chinese',
-];
+// const LANGUAGES = [
+//   'English',
+//   'Spanish',
+//   'French',
+//   'German',
+//   'Hindi',
+//   'Chinese',
+// ];
 
 const CELL_DATA = Array.from({length: 10}, (_, i) => ({
   id: i,
@@ -34,7 +36,9 @@ const CELL_DATA = Array.from({length: 10}, (_, i) => ({
 const windowWidth = Dimensions.get('window').width;
 
 export default function PendingFiles() {
-  const [selectedLanguage, setSelectedLanguage] = useState('English');
+  // const [selectedLanguage, setSelectedLanguage] = useState('English');
+  const [selectedLanguage, setSelectedLanguage] = useState(null); // will be set when languages load
+
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [currentDayIndex, setCurrentDayIndex] = useState(0);
@@ -43,6 +47,22 @@ export default function PendingFiles() {
 
   const today = moment().format('D/M/YYYY');
   const navigation = useNavigation();
+
+  const dispatch = useDispatch();
+  const {list: languages, loading} = useSelector(state => state.languages);
+
+  useEffect(() => {
+    dispatch(fetchLanguages());
+  }, [dispatch]);
+
+  useEffect(() => {
+    if (!loading && languages.length > 0 && !selectedLanguage) {
+      const englishLang = languages.find(l => l.language === 'English');
+      if (englishLang) {
+        setSelectedLanguage(englishLang); // ✅ store full object
+      }
+    }
+  }, [loading, languages, selectedLanguage]);
 
   const handleSelect = lang => {
     setSelectedLanguage(lang);
@@ -71,8 +91,11 @@ export default function PendingFiles() {
   };
 
   const handleNext = () => {
-    navigation.navigate('AssignFiles', {selectedFiles});
-    console.log(selectedFiles);
+    navigation.navigate('AssignFiles', {
+      selectedFiles,
+      selectedLanguageId: selectedLanguage?.id,
+    });
+    console.log('okokokok', selectedFiles, selectedLanguage?.id);
   };
 
   const getWeekDays = () => {
@@ -121,10 +144,12 @@ export default function PendingFiles() {
       <HeaderControls
         selectedLanguage={selectedLanguage}
         dropdownOpen={dropdownOpen}
-        onToggleDropdown={() => setDropdownOpen(prev => !prev)}
-        onSelectLanguage={handleSelect}
+        onToggleDropdown={() => setDropdownOpen(!dropdownOpen)}
+        onSelectLanguage={lang => {
+          setSelectedLanguage(lang); // stores full object, including id
+          setDropdownOpen(false);
+        }}
       />
-
       {/* Calendar View */}
       <WeeklyCalendar onSelectDate={handleDateSelect} />
 
