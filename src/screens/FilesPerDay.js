@@ -7,6 +7,7 @@ import {fetchDepartments} from '../redux/reducers/departmentsList';
 import {useDispatch, useSelector} from 'react-redux';
 export default function FilesPerDay({route}) {
   const {day, files} = route.params;
+  console.log('44444444444444', files);
   const navigation = useNavigation();
 
   const [selectedDept, setSelectedDept] = useState(null);
@@ -77,7 +78,7 @@ export default function FilesPerDay({route}) {
             fileItem={item}
             isSelected={isSelected(item.id)}
             onToggleSelect={() => toggleFileSelection(item.id)}
-            style={styles.gridCell} // 👈 Add this
+            style={styles.gridCell}
           />
         )}
         contentContainerStyle={styles.list}

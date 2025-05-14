@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 /* eslint-disable react-native/no-inline-styles */
 import {useNavigation} from '@react-navigation/native';
 import React, {useState, useEffect} from 'react';
@@ -16,13 +17,7 @@ import FileCell from '../components/fileCell';
 import HeaderControls from '../components/headerControl';
 import {useDispatch, useSelector} from 'react-redux';
 import {fetchDepartments} from '../redux/reducers/departmentsList';
-
-const CELL_DATA = Array.from({length: 10}, (_, i) => ({
-  id: i,
-  fileName: `#10222/${i + 1}`,
-  duration: '1/4/2025 – 20/4/2025',
-  people: `${10 + i}`,
-}));
+import {fetchUnassignedFiles} from '../redux/reducers/unassignedFiles';
 
 const windowWidth = Dimensions.get('window').width;
 
@@ -39,7 +34,13 @@ export default function PendingFiles() {
   const navigation = useNavigation();
 
   const dispatch = useDispatch();
+
   const {list: departments, loading} = useSelector(state => state.departments);
+  const {
+    list: unassignedFiles,
+    loading: filesLoading,
+    error,
+  } = useSelector(state => state.unassignedFiles);
 
   useEffect(() => {
     dispatch(fetchDepartments());
@@ -56,10 +57,33 @@ export default function PendingFiles() {
     }
   }, [loading, departments, selectedDept]);
 
+  useEffect(() => {
+    if (selectedDept?.id) {
+      dispatch(fetchUnassignedFiles(selectedDept.id));
+    }
+  }, [selectedDept, dispatch]);
+
+  useEffect(() => {
+    if (unassignedFiles && unassignedFiles.length > 0) {
+      // Step 1: Get the earliest arrival date
+      const earliestArrival = unassignedFiles
+        .map(file => moment(file.arrival_date))
+        .sort((a, b) => a - b)[0]; // get earliest
+
+      // Step 2: Set selectedDate and startOfWeek to this date
+      setSelectedDate(earliestArrival);
+      setStartOfWeek(moment(earliestArrival).startOf('week'));
+    }
+  }, [unassignedFiles]);
+
   const handleSeeAll = (day, index) => {
+    const filteredFiles = unassignedFiles.filter(
+      file => moment(file.arrival_date).format('D/M/YYYY') === day.date,
+    );
+
     navigation.navigate('filesPerDay', {
       day,
-      files: CELL_DATA,
+      files: filteredFiles, // ✅ only files for that day
       selectedFiles,
       toggleFileSelection,
     });
@@ -124,7 +148,7 @@ export default function PendingFiles() {
     setSelectedDate(date); // Store the selected date
     setStartOfWeek(moment(date).startOf('week')); // Set the startOfWeek to the selected date's week
   };
-
+  // console.log('99999', unassignedFiles);
   return (
     <View style={{flex: 1, padding: 10, backgroundColor: 'white'}}>
       {/* Dropdown & Labels Row */}
@@ -132,69 +156,113 @@ export default function PendingFiles() {
         selectedDepartment={selectedDept}
         dropdownOpen={dropdownOpen}
         onToggleDropdown={() => setDropdownOpen(!dropdownOpen)}
-        onSelectDepartment={setSelectedDept}
+        onSelectDepartment={dept => {
+          setSelectedDept(dept);
+          setDropdownOpen(false); // close the dropdown after selection
+        }}
       />
 
       {/* Calendar View */}
       <WeeklyCalendar onSelectDate={handleDateSelect} />
 
+      {error && <Text style={{color: 'red'}}>Error: {error}</Text>}
       {/* Days Navigation */}
-      <View style={styles.dayNavContainer}>
-        <TouchableOpacity style={styles.arrowButton} onPress={goToPrevious}>
-          <Icon name="chevron-left" size={30} color="#007bff" />
-        </TouchableOpacity>
+      {!filesLoading && (
+        <View style={styles.dayNavContainer}>
+          <TouchableOpacity style={styles.arrowButton} onPress={goToPrevious}>
+            <Icon name="chevron-left" size={30} color="#007bff" />
+          </TouchableOpacity>
 
-        <FlatList
-          horizontal
-          data={getWeekDays().slice(0, 4)}
-          keyExtractor={item => item.date}
-          renderItem={({item, index}) => {
-            const isToday = item.date === today;
-            const isLastColumn = index === 3; // because you have 4 items: index 0,1,2,3
+          <FlatList
+            horizontal
+            data={getWeekDays().slice(0, 4)}
+            keyExtractor={item => item.date}
+            renderItem={({item, index}) => {
+              const isToday = item.date === today;
+              const isLastColumn = index === 3; // because you have 4 items: index 0,1,2,3
 
-            return (
-              <View
-                style={[
-                  styles.column,
-                  isToday && styles.todayColumn,
-                  isLastColumn && {borderRightWidth: 0}, // remove right border for last column
-                ]}>
-                <View style={styles.header}>
-                  <Text style={[styles.day, isToday && styles.highlightedDay]}>
-                    {item.day}
-                  </Text>
-                  <Text style={styles.date}>{item.date}</Text>
+              return (
+                <View
+                  style={[
+                    styles.column,
+                    isToday && styles.todayColumn,
+                    isLastColumn && {borderRightWidth: 0}, // remove right border for last column
+                  ]}>
+                  <View style={styles.header}>
+                    <Text
+                      style={[styles.day, isToday && styles.highlightedDay]}>
+                      {item.day}
+                    </Text>
+                    <Text style={styles.date}>{item.date}</Text>
+                  </View>
+
+                  {(() => {
+                    console.log('--- Checking file dates ---');
+                    unassignedFiles.forEach(file => {
+                      console.log(
+                        'File arrival date:',
+                        file.arrival_date,
+                        '=>',
+                        moment(file.arrival_date).format('D/M/YYYY'),
+                        '| Day item:',
+                        item.date,
+                      );
+                    });
+
+                    return unassignedFiles
+                      .filter(
+                        file =>
+                          moment(file.arrival_date).format('D/M/YYYY') ===
+                          item.date,
+                      )
+                      .map((fileItem, rowIndex) => {
+                        const selected = isSelected(item, fileItem.id);
+                        const transformedFileItem = {
+                          id: fileItem.id,
+                          fileName: `${fileItem.id}`,
+                          duration: `${fileItem.arrival_date} – ${fileItem.departure_date}`,
+                          people: fileItem.client_name,
+                        };
+
+                        console.log(
+                          'Transformed File Item:',
+                          transformedFileItem,
+                        );
+
+                        return (
+                          <FileCell
+                            key={rowIndex}
+                            day={item}
+                            fileItem={transformedFileItem}
+                            isSelected={selected}
+                            onToggleSelect={toggleFileSelection}
+                          />
+                        );
+                      });
+                  })()}
+
+                  {unassignedFiles.some(
+                    file =>
+                      moment(file.arrival_date).format('D/M/YYYY') ===
+                      item.date,
+                  ) && (
+                    <TouchableOpacity
+                      style={styles.seeAllButton}
+                      onPress={() => handleSeeAll(item, currentDayIndex)}>
+                      <Text style={styles.seeAllText}>See All</Text>
+                    </TouchableOpacity>
+                  )}
                 </View>
+              );
+            }}
+            showsHorizontalScrollIndicator={false}
+          />
 
-                {CELL_DATA.slice(0, 10).map((fileItem, rowIndex) => {
-                  const selected = isSelected(item, fileItem.id);
-                  return (
-                    <FileCell
-                      key={rowIndex}
-                      day={item}
-                      fileItem={fileItem}
-                      isSelected={selected}
-                      onToggleSelect={toggleFileSelection}
-                    />
-                  );
-                })}
-
-                <TouchableOpacity
-                  style={styles.seeAllButton}
-                  onPress={() => handleSeeAll(item, currentDayIndex)}>
-                  <Text style={styles.seeAllText}>See All</Text>
-                </TouchableOpacity>
-              </View>
-            );
-          }}
-          showsHorizontalScrollIndicator={false}
-        />
-
-        <TouchableOpacity style={styles.arrowButton} onPress={goToNext}>
-          <Icon name="chevron-right" size={30} color="#007bff" />
-        </TouchableOpacity>
-      </View>
-
+          <TouchableOpacity style={styles.arrowButton} onPress={goToNext}>
+            <Icon name="chevron-right" size={30} color="#007bff" />
+          </TouchableOpacity>
+        </View>
+      )}
       {/* Bottom Next Button */}
       <View style={styles.nextButtonWrapper}>
         <TouchableOpacity
