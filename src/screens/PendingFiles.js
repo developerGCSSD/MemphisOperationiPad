@@ -391,22 +391,26 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   nextButton: {
-    marginVertical: 16,
     backgroundColor: '#27548A',
     borderRadius: 8,
     paddingVertical: 12,
+    paddingHorizontal: 20,
     alignItems: 'center',
-    width: '40%',
-  },
-  nextButtonWrapper: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    margin: 10,
+    width: 300, // Optional: Adjust the width of the button
   },
   nextButtonText: {
     color: '#fff',
     fontWeight: 'bold',
     fontSize: 18,
+  },
+  nextButtonWrapper: {
+    position: 'absolute', // Keep the button fixed
+    bottom: 40, // Distance from the bottom of the screen
+    right: 20, // Distance from the right of the screen
+    paddingHorizontal: 10,
+    paddingVertical: 10,
+    backgroundColor: 'transparent',
+    justifyContent: 'flex-end',
   },
   nextButtonDisabled: {
     backgroundColor: '#ccc',
