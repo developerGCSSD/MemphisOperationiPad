@@ -16,7 +16,7 @@ const ClickableCard = ({imageSource, label, onPress}) => {
     <TouchableOpacity
       style={styles.card}
       onPress={onPress}
-      activeOpacity={0.85}>
+      activeOpacity={0.45}>
       <View style={styles.imageWrapper}>
         <Image source={imageSource} style={styles.image} resizeMode="contain" />
       </View>
