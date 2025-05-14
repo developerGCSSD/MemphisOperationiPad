@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   FlatList,
   Dimensions,
+  ActivityIndicator,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import moment from 'moment';
@@ -165,9 +166,17 @@ export default function PendingFiles() {
       {/* Calendar View */}
       <WeeklyCalendar onSelectDate={handleDateSelect} />
 
-      {error && <Text style={{color: 'red'}}>Error: {error}</Text>}
+      {/* {error && <Text style={{color: 'red'}}>Error: {error}</Text>} */}
       {/* Days Navigation */}
-      {!filesLoading && (
+      {filesLoading ? (
+        <ActivityIndicator size="large" color="#007bff" />
+      ) : unassignedFiles.length === 0 || error ? (
+        <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+          <Text style={{fontSize: 16, color: '#888'}}>
+            No unassigned files found for this department.
+          </Text>
+        </View>
+      ) : (
         <View style={styles.dayNavContainer}>
           <TouchableOpacity style={styles.arrowButton} onPress={goToPrevious}>
             <Icon name="chevron-left" size={30} color="#007bff" />
@@ -179,14 +188,14 @@ export default function PendingFiles() {
             keyExtractor={item => item.date}
             renderItem={({item, index}) => {
               const isToday = item.date === today;
-              const isLastColumn = index === 3; // because you have 4 items: index 0,1,2,3
+              const isLastColumn = index === 3;
 
               return (
                 <View
                   style={[
                     styles.column,
                     isToday && styles.todayColumn,
-                    isLastColumn && {borderRightWidth: 0}, // remove right border for last column
+                    isLastColumn && {borderRightWidth: 0},
                   ]}>
                   <View style={styles.header}>
                     <Text
@@ -196,50 +205,31 @@ export default function PendingFiles() {
                     <Text style={styles.date}>{item.date}</Text>
                   </View>
 
-                  {(() => {
-                    console.log('--- Checking file dates ---');
-                    unassignedFiles.forEach(file => {
-                      console.log(
-                        'File arrival date:',
-                        file.arrival_date,
-                        '=>',
-                        moment(file.arrival_date).format('D/M/YYYY'),
-                        '| Day item:',
+                  {unassignedFiles
+                    .filter(
+                      file =>
+                        moment(file.arrival_date).format('D/M/YYYY') ===
                         item.date,
+                    )
+                    .map((fileItem, rowIndex) => {
+                      const selected = isSelected(item, fileItem.id);
+                      const transformedFileItem = {
+                        id: fileItem.id,
+                        fileName: `${fileItem.id}`,
+                        duration: `${fileItem.arrival_date} – ${fileItem.departure_date}`,
+                        people: fileItem.client_name,
+                      };
+
+                      return (
+                        <FileCell
+                          key={rowIndex}
+                          day={item}
+                          fileItem={transformedFileItem}
+                          isSelected={selected}
+                          onToggleSelect={toggleFileSelection}
+                        />
                       );
-                    });
-
-                    return unassignedFiles
-                      .filter(
-                        file =>
-                          moment(file.arrival_date).format('D/M/YYYY') ===
-                          item.date,
-                      )
-                      .map((fileItem, rowIndex) => {
-                        const selected = isSelected(item, fileItem.id);
-                        const transformedFileItem = {
-                          id: fileItem.id,
-                          fileName: `${fileItem.id}`,
-                          duration: `${fileItem.arrival_date} – ${fileItem.departure_date}`,
-                          people: fileItem.client_name,
-                        };
-
-                        console.log(
-                          'Transformed File Item:',
-                          transformedFileItem,
-                        );
-
-                        return (
-                          <FileCell
-                            key={rowIndex}
-                            day={item}
-                            fileItem={transformedFileItem}
-                            isSelected={selected}
-                            onToggleSelect={toggleFileSelection}
-                          />
-                        );
-                      });
-                  })()}
+                    })}
 
                   {unassignedFiles.some(
                     file =>
@@ -263,6 +253,7 @@ export default function PendingFiles() {
           </TouchableOpacity>
         </View>
       )}
+
       {/* Bottom Next Button */}
       <View style={styles.nextButtonWrapper}>
         <TouchableOpacity
