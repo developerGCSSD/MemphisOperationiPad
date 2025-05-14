@@ -15,16 +15,7 @@ import WeeklyCalendar from '../components/weeklyCalendar';
 import FileCell from '../components/fileCell';
 import HeaderControls from '../components/headerControl';
 import {useDispatch, useSelector} from 'react-redux';
-import {fetchLanguages} from '../redux/reducers/languagesList';
-
-// const LANGUAGES = [
-//   'English',
-//   'Spanish',
-//   'French',
-//   'German',
-//   'Hindi',
-//   'Chinese',
-// ];
+import {fetchDepartments} from '../redux/reducers/departmentsList';
 
 const CELL_DATA = Array.from({length: 10}, (_, i) => ({
   id: i,
@@ -36,10 +27,9 @@ const CELL_DATA = Array.from({length: 10}, (_, i) => ({
 const windowWidth = Dimensions.get('window').width;
 
 export default function PendingFiles() {
-  // const [selectedLanguage, setSelectedLanguage] = useState('English');
-  const [selectedLanguage, setSelectedLanguage] = useState(null); // will be set when languages load
-
+  const [selectedDept, setSelectedDept] = useState(null);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [currentDayIndex, setCurrentDayIndex] = useState(0);
   const [startOfWeek, setStartOfWeek] = useState(moment());
@@ -49,25 +39,22 @@ export default function PendingFiles() {
   const navigation = useNavigation();
 
   const dispatch = useDispatch();
-  const {list: languages, loading} = useSelector(state => state.languages);
+  const {list: departments, loading} = useSelector(state => state.departments);
 
   useEffect(() => {
-    dispatch(fetchLanguages());
+    dispatch(fetchDepartments());
   }, [dispatch]);
 
   useEffect(() => {
-    if (!loading && languages.length > 0 && !selectedLanguage) {
-      const englishLang = languages.find(l => l.language === 'English');
-      if (englishLang) {
-        setSelectedLanguage(englishLang); // ✅ store full object
+    if (!loading && departments.length > 0 && !selectedDept) {
+      const defaultDept = departments.find(
+        dept => dept.name === 'English Eagles Team',
+      );
+      if (defaultDept) {
+        setSelectedDept(defaultDept);
       }
     }
-  }, [loading, languages, selectedLanguage]);
-
-  const handleSelect = lang => {
-    setSelectedLanguage(lang);
-    setDropdownOpen(false);
-  };
+  }, [loading, departments, selectedDept]);
 
   const handleSeeAll = (day, index) => {
     navigation.navigate('filesPerDay', {
@@ -93,9 +80,9 @@ export default function PendingFiles() {
   const handleNext = () => {
     navigation.navigate('AssignFiles', {
       selectedFiles,
-      selectedLanguageId: selectedLanguage?.id,
+      selectedLanguageId: selectedDept?.id,
     });
-    console.log('okokokok', selectedFiles, selectedLanguage?.id);
+    console.log('okokokok', selectedFiles, setSelectedDept?.id);
   };
 
   const getWeekDays = () => {
@@ -142,14 +129,12 @@ export default function PendingFiles() {
     <View style={{flex: 1, padding: 10, backgroundColor: 'white'}}>
       {/* Dropdown & Labels Row */}
       <HeaderControls
-        selectedLanguage={selectedLanguage}
+        selectedDepartment={selectedDept}
         dropdownOpen={dropdownOpen}
         onToggleDropdown={() => setDropdownOpen(!dropdownOpen)}
-        onSelectLanguage={lang => {
-          setSelectedLanguage(lang); // stores full object, including id
-          setDropdownOpen(false);
-        }}
+        onSelectDepartment={setSelectedDept}
       />
+
       {/* Calendar View */}
       <WeeklyCalendar onSelectDate={handleDateSelect} />
 
