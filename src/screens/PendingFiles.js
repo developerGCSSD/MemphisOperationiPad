@@ -170,7 +170,9 @@ export default function PendingFiles() {
       {/* Days Navigation */}
       {filesLoading ? (
         <ActivityIndicator size="large" color="#007bff" />
-      ) : unassignedFiles.length === 0 || error ? (
+      ) : !Array.isArray(unassignedFiles) ||
+        unassignedFiles.length === 0 ||
+        error ? (
         <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
           <Text style={{fontSize: 16, color: '#888'}}>
             No unassigned files found for this department.
