@@ -68,7 +68,11 @@ export default function FilesPerDay({route}) {
 
       {/* File List */}
       <FlatList
-        data={files}
+        data={files.map(fileItem => ({
+          ...fileItem,
+          duration: `${fileItem.arrival_date} – ${fileItem.departure_date}`,
+          people: fileItem.client_name,
+        }))}
         keyExtractor={item => item.id.toString()}
         numColumns={4}
         columnWrapperStyle={styles.row}
