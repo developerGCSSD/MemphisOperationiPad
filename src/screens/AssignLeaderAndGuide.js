@@ -1,3 +1,4 @@
+/* eslint-disable react-native/no-inline-styles */
 import React, {useState, useEffect} from 'react';
 import {
   View,
@@ -11,14 +12,15 @@ import {useRoute, useNavigation} from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import RadioButtonCard from '../components/RadioButtonCard';
 import {useDispatch, useSelector} from 'react-redux';
-import {fetchAssignments} from '../redux/reducers/assignmentLists'; // Import your Redux slice action
+import {fetchAssignments} from '../redux/reducers/assignmentLists';
 
 export default function AssignLeaderAndGuide() {
   const route = useRoute();
   const navigation = useNavigation();
-  const {selectedFiles, selectedLanguageId} = route.params;
+  const {selectedFiles, selectedDeptId} = route.params;
   const [selectedLeader, setSelectedLeader] = useState(null);
   const [selectedGuide, setSelectedGuide] = useState(null);
+  console.log('Route params:', route.params);
 
   const dispatch = useDispatch();
   const {leaders, guides, loading, error} = useSelector(
@@ -29,16 +31,19 @@ export default function AssignLeaderAndGuide() {
     dispatch(
       fetchAssignments({
         assignmentType: 'Leader',
-        languageId: selectedLanguageId,
+        departmentId: selectedDeptId,
       }),
     );
     dispatch(
       fetchAssignments({
         assignmentType: 'Guide',
-        languageId: selectedLanguageId,
+        departmentId: selectedDeptId,
       }),
     );
-  }, [dispatch, selectedLanguageId]);
+  }, [dispatch, selectedDeptId]);
+
+  console.log('Leaders:', leaders);
+  console.log('Guides:', guides);
 
   const isAssignEnabled = selectedLeader !== null || selectedGuide !== null;
 
@@ -57,14 +62,16 @@ export default function AssignLeaderAndGuide() {
 
         {/* File List */}
         <View style={styles.fileListWrapper}>
-          {selectedFiles.map((item, index) => (
-            <View key={`${item}-${index}`} style={styles.cardWrapper}>
-              <View style={styles.card}>
-                <Icon name="folder" size={16} color="#f4c430" />
-                <Text style={styles.cardText}>{item}</Text>
+          {selectedFiles
+            .filter(item => item) // Remove null/undefined
+            .map((item, index) => (
+              <View key={`${item}-${index}`} style={styles.cardWrapper}>
+                <View style={styles.card}>
+                  <Icon name="folder" size={16} color="#f4c430" />
+                  <Text style={styles.cardText}>{item}</Text>
+                </View>
               </View>
-            </View>
-          ))}
+            ))}
         </View>
 
         {/* Leader Selection */}
@@ -172,7 +179,7 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   cancelButton: {
-    backgroundColor: '#C5172E', // Background color for Cancel button
+    backgroundColor: '#C5172E',
   },
   scrollContent: {
     paddingBottom: 40,

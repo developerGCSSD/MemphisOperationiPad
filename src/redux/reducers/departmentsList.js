@@ -1,15 +1,15 @@
 import {createSlice, createAsyncThunk} from '@reduxjs/toolkit';
 import {retrieveUser} from '../../storage/authData';
 
-const fetchLanguageList = async () => {
+const fetchDepartmentList = async () => {
   try {
     const user = await retrieveUser();
-    if (!user?.token) {
-      throw new Error('Token not found');
+    if (!user?.token || !user?.company_id) {
+      throw new Error('Token or company_id not found');
     }
 
     const response = await fetch(
-      'https://staging.tangramerp.com/api-operation/languages',
+      `https://staging.tangramerp.com/api-operation/departments/${user.company_id}`,
       {
         method: 'GET',
         headers: {
@@ -25,31 +25,31 @@ const fetchLanguageList = async () => {
     }
 
     const data = await response.json();
-    console.log('ooooooo', data);
-    return data.languages;
+    console.log('Departments response:', data);
+    return data.departments;
   } catch (error) {
     throw error;
   }
 };
 
-export const fetchLanguages = createAsyncThunk(
-  'languages/fetchLanguages',
+export const fetchDepartments = createAsyncThunk(
+  'departments/fetchDepartments',
   async (_, {rejectWithValue}) => {
     try {
-      const rawLanguages = await fetchLanguageList();
+      const rawDepartments = await fetchDepartmentList();
 
-      // Transform the nested structure: { Language: { id, language, abbrev } } → { id, language, abbrev }
-      const transformed = rawLanguages.map(item => item.Language);
-      console.log('ffffffff', transformed);
+      // Transform from { Department: { id, name, default_lang } } → { id, name, default_lang }
+      const transformed = rawDepartments.map(item => item.Department);
+      console.log('Transformed departments:', transformed);
       return transformed;
     } catch (error) {
-      return rejectWithValue(error.message || 'Language fetch failed');
+      return rejectWithValue(error.message || 'Department fetch failed');
     }
   },
 );
 
-const languageSlice = createSlice({
-  name: 'languages',
+const departmentSlice = createSlice({
+  name: 'departments',
   initialState: {
     list: [],
     loading: false,
@@ -58,19 +58,19 @@ const languageSlice = createSlice({
   reducers: {},
   extraReducers: builder => {
     builder
-      .addCase(fetchLanguages.pending, state => {
+      .addCase(fetchDepartments.pending, state => {
         state.loading = true;
         state.error = null;
       })
-      .addCase(fetchLanguages.fulfilled, (state, action) => {
+      .addCase(fetchDepartments.fulfilled, (state, action) => {
         state.loading = false;
         state.list = action.payload;
       })
-      .addCase(fetchLanguages.rejected, (state, action) => {
+      .addCase(fetchDepartments.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       });
   },
 });
 
-export default languageSlice.reducer;
+export default departmentSlice.reducer;

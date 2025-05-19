@@ -3,37 +3,50 @@ import {View, Text, FlatList, StyleSheet, TouchableOpacity} from 'react-native';
 import FileCell from '../components/fileCell';
 import {useNavigation} from '@react-navigation/native';
 import HeaderControls from '../components/headerControl';
-import {fetchLanguages} from '../redux/reducers/languagesList';
+import {fetchDepartments} from '../redux/reducers/departmentsList';
 import {useDispatch, useSelector} from 'react-redux';
 export default function FilesPerDay({route}) {
   const {day, files} = route.params;
+  console.log('44444444444444', files);
   const navigation = useNavigation();
-
-  // --- Dropdown-related state ---
-  // const [selectedLanguage, setSelectedLanguage] = useState('English');
-  const [selectedLanguage, setSelectedLanguage] = useState(null);
-
+  const [selectedDept, setSelectedDept] = useState(null);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+
   const dispatch = useDispatch();
-  const {list: languages, loading} = useSelector(state => state.languages);
+  const {list: departments, loading} = useSelector(state => state.departments);
 
   useEffect(() => {
-    dispatch(fetchLanguages());
+    dispatch(fetchDepartments());
   }, [dispatch]);
 
+  // useEffect(() => {
+  //   if (!loading && departments.length > 0 && !selectedDept) {
+  //     const defaultDept = departments.find(
+  //       dept => dept.name === 'English Eagles Team',
+  //     );
+  //     if (defaultDept) {
+  //       setSelectedDept(defaultDept);
+  //     }
+  //   }
+  // }, [loading, departments, selectedDept]);
+
   useEffect(() => {
-    if (!loading && languages.length > 0 && !selectedLanguage) {
-      const englishLang = languages.find(l => l.language === 'English');
-      if (englishLang) {
-        setSelectedLanguage(englishLang); // ✅ store full object
+    if (!loading && departments.length > 0 && !selectedDept) {
+      const deptFromNav = departments.find(
+        d => d.id === route.params?.selectedDeptId,
+      );
+      if (deptFromNav) {
+        setSelectedDept(deptFromNav);
+      } else {
+        const fallbackDept = departments.find(
+          d => d.name === 'English Eagles Team',
+        );
+        if (fallbackDept) {
+          setSelectedDept(fallbackDept);
+        }
       }
     }
-  }, [loading, languages, selectedLanguage]);
-
-  // const handleSelect = lang => {
-  //   setSelectedLanguage(lang);
-  //   setDropdownOpen(false);
-  // };
+  }, [loading, departments, selectedDept, route.params]);
 
   // --- File selection state ---
   const [selectedFiles, setSelectedFiles] = useState([]);
@@ -48,24 +61,23 @@ export default function FilesPerDay({route}) {
   const isSelected = fileId => selectedFiles.includes(`${day.date}-${fileId}`);
 
   const handleNext = () => {
+    const selectedFileIds = selectedFiles.map(key => key.split('-')[1]); // Extract fileId from "date-fileId"
     navigation.navigate('AssignFiles', {
-      selectedFiles,
-      selectedLanguageId: selectedLanguage?.id,
+      selectedFiles: selectedFileIds,
+      selectedDeptId: selectedDept?.id,
     });
-    console.log('okokokok', selectedFiles, selectedLanguage?.id);
+    console.log('Navigating with:', selectedFileIds, selectedDept?.id);
   };
 
   return (
     <View style={styles.container}>
       {/* Header Dropdowns and Labels */}
       <HeaderControls
-        selectedLanguage={selectedLanguage}
+        selectedDepartment={selectedDept}
         dropdownOpen={dropdownOpen}
         onToggleDropdown={() => setDropdownOpen(!dropdownOpen)}
-        onSelectLanguage={lang => {
-          setSelectedLanguage(lang); // ✅ this is now an object like { id: 1, language: 'English' }
-          setDropdownOpen(false);
-        }}
+        onSelectDepartment={setSelectedDept}
+        showFilter={false}
       />
       {/* Heading */}
       <Text style={styles.heading}>
@@ -74,7 +86,11 @@ export default function FilesPerDay({route}) {
 
       {/* File List */}
       <FlatList
-        data={files}
+        data={files.map(fileItem => ({
+          ...fileItem,
+          duration: `${fileItem.arrival_date} – ${fileItem.departure_date}`,
+          people: fileItem.client_name,
+        }))}
         keyExtractor={item => item.id.toString()}
         numColumns={4}
         columnWrapperStyle={styles.row}
@@ -84,7 +100,7 @@ export default function FilesPerDay({route}) {
             fileItem={item}
             isSelected={isSelected(item.id)}
             onToggleSelect={() => toggleFileSelection(item.id)}
-            style={styles.gridCell} // 👈 Add this
+            style={styles.gridCell}
           />
         )}
         contentContainerStyle={styles.list}

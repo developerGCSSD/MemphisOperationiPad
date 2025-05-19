@@ -1,55 +1,78 @@
 import React, {useEffect} from 'react';
-import {View, Text, TouchableOpacity, StyleSheet} from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  ScrollView,
+} from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {useSelector, useDispatch} from 'react-redux';
-import {fetchLanguages} from '../redux/reducers/languagesList';
+import {fetchDepartments} from '../redux/reducers/departmentsList'; // 👈 Make sure this path is correct
 
+// In HeaderControls.js
 export default function HeaderControls({
-  selectedLanguage,
+  selectedDepartment,
   dropdownOpen,
   onToggleDropdown,
-  onSelectLanguage,
+  onSelectDepartment,
+  showFilter = true, // 👈 new prop with default
 }) {
   const dispatch = useDispatch();
-  const {list: languageList, loading} = useSelector(state => state.languages);
+  const {list: departmentList, loading} = useSelector(
+    state => state.departments,
+  );
 
   useEffect(() => {
-    dispatch(fetchLanguages());
-  }, [dispatch]);
+    if (showFilter) {
+      dispatch(fetchDepartments());
+    }
+  }, [dispatch, showFilter]);
 
-  const languages = languageList; // ✅ keeps both id and name
+  const departments = departmentList;
+  const user = useSelector(state => state.auth.user);
 
   return (
     <View style={styles.topRow}>
       <View style={styles.leftContainer}>
         <View style={styles.languageBranchContainer}>
-          {/* Language Dropdown */}
-          <TouchableOpacity style={styles.dropdown} onPress={onToggleDropdown}>
-            <Text style={styles.dropdownText}>
-              {selectedLanguage?.language || 'Select Language'}
-            </Text>
-            <Icon
-              name={dropdownOpen ? 'chevron-up' : 'chevron-down'}
-              size={20}
-              color="#555"
-            />
-          </TouchableOpacity>
+          {/* Department Dropdown */}
+          {showFilter && (
+            <TouchableOpacity
+              style={styles.dropdown}
+              onPress={onToggleDropdown}>
+              <Text style={styles.dropdownText}>
+                {selectedDepartment?.name || 'Select Department'}
+              </Text>
+              <Icon
+                name={dropdownOpen ? 'chevron-up' : 'chevron-down'}
+                size={20}
+                color="#555"
+              />
+            </TouchableOpacity>
+          )}
 
           {/* Branch Label */}
-          <Text style={styles.branchLabel}>Branch: Egypt</Text>
+          <Text style={styles.branchLabel}>
+            Branch: {user?.branch_name.split(' {')[0] || 'Unknown'}
+          </Text>
         </View>
 
-        {dropdownOpen && (
+        {/* Dropdown List */}
+        {showFilter && dropdownOpen && (
           <View style={styles.dropdownList}>
-            {languages.map(lang => (
-              <TouchableOpacity
-                key={lang.id}
-                style={styles.dropdownItem}
-                onPress={() => onSelectLanguage(lang)} // ✅ send full object
-              >
-                <Text style={styles.dropdownItemText}>{lang.language}</Text>
-              </TouchableOpacity>
-            ))}
+            <ScrollView
+              style={styles.dropdownScroll}
+              nestedScrollEnabled={true}>
+              {departments.map(dept => (
+                <TouchableOpacity
+                  key={dept.id}
+                  style={styles.dropdownItem}
+                  onPress={() => onSelectDepartment(dept)}>
+                  <Text style={styles.dropdownItemText}>{dept.name}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
           </View>
         )}
       </View>
@@ -97,21 +120,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     color: '#333',
   },
-  dropdownList: {
-    position: 'absolute',
-    top: 40,
-    left: 0,
-    zIndex: 10,
-    backgroundColor: '#fff',
-    borderColor: '#ddd',
-    borderWidth: 1,
-    borderRadius: 6,
-    width: 120,
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
-  },
   dropdownItem: {
     paddingVertical: 8,
     paddingHorizontal: 10,
@@ -144,5 +152,24 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#007bff',
     fontWeight: '600',
+  },
+  dropdownList: {
+    position: 'absolute',
+    top: 40,
+    left: 0,
+    zIndex: 10,
+    backgroundColor: '#fff',
+    borderColor: '#ddd',
+    borderWidth: 1,
+    borderRadius: 6,
+    width: 180,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    maxHeight: 200, // ⬅️ Limit height so scroll works
+  },
+  dropdownScroll: {
+    maxHeight: 250, // ⬅️ Ensure ScrollView is constrained
   },
 });

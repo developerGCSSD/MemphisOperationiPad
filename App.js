@@ -42,7 +42,7 @@ const App = () => {
             component={PendingFiles}
             options={{
               headerShown: true,
-              title: 'Files Pending Assignment',
+              title: 'Files Assignment',
               headerTintColor: '#FFFFFF',
               headerStyle: {
                 backgroundColor: '#27548A',

@@ -1,28 +1,38 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import {View, Text, StyleSheet, TouchableOpacity} from 'react-native';
 import moment from 'moment';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-
-export default function WeeklyCalendar({onSelectDate}) {
+export default function WeeklyCalendar({
+  onSelectDate,
+  startOfWeekFromPending,
+  selectedDateFromPending,
+}) {
   const today = moment();
   const [currentWeekDate, setCurrentWeekDate] = useState(today);
   const [selectedDate, setSelectedDate] = useState(null);
+
+  useEffect(() => {
+    if (startOfWeekFromPending) {
+      setCurrentWeekDate(startOfWeekFromPending);
+    }
+  }, [startOfWeekFromPending]);
 
   const startOfWeek = moment(currentWeekDate).startOf('week');
   const daysOfWeek = Array.from({length: 7}).map((_, index) =>
     moment(startOfWeek).add(index, 'days'),
   );
 
-  const handlePrevWeek = () => {
-    setCurrentWeekDate(prev => moment(prev).subtract(7, 'days'));
-  };
+  // const handlePrevWeek = () => {
+  //   setCurrentWeekDate(prev => moment(prev).subtract(7, 'days'));
+  // };
 
-  const handleNextWeek = () => {
-    setCurrentWeekDate(prev => moment(prev).add(7, 'days'));
-  };
+  // const handleNextWeek = () => {
+  //   setCurrentWeekDate(prev => moment(prev).add(7, 'days'));
+  // };
 
   const isToday = date => date.isSame(today, 'day');
-  const isSelected = date => selectedDate && date.isSame(selectedDate, 'day');
+  const isSelected = date =>
+    selectedDateFromPending && date.isSame(selectedDateFromPending, 'day');
 
   const handleDateSelect = date => {
     setSelectedDate(date);
@@ -35,14 +45,14 @@ export default function WeeklyCalendar({onSelectDate}) {
         <Text style={styles.monthYearText}>
           {currentWeekDate.format('MMMM YYYY')}
         </Text>
-        <View style={styles.arrowsContainer}>
+        {/* <View style={styles.arrowsContainer}>
           <TouchableOpacity onPress={handlePrevWeek} style={styles.arrowButton}>
             <Icon name="chevron-left" size={26} color="#007bff" />
           </TouchableOpacity>
           <TouchableOpacity onPress={handleNextWeek} style={styles.arrowButton}>
             <Icon name="chevron-right" size={26} color="#007bff" />
           </TouchableOpacity>
-        </View>
+        </View> */}
       </View>
 
       <View style={styles.weekRow}>
@@ -136,12 +146,12 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
   selectedDayHighlight: {
-    backgroundColor: '#27548A', // Strong deep blue
-    borderColor: '#27548A',
+    backgroundColor: '#e6f7ff', // Strong deep blue
+    borderColor: '#007bff',
     borderWidth: 2, // Slightly thicker
   },
   selectedDayText: {
-    color: 'white',
+    color: '#27548A',
     fontWeight: 'bold',
     fontSize: 14, // Slightly bigger
   },

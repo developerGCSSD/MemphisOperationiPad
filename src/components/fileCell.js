@@ -1,4 +1,3 @@
-// FileCell.js
 import React from 'react';
 import {TouchableOpacity, View, Text, StyleSheet} from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -10,13 +9,14 @@ export default function FileCell({
   onToggleSelect,
   style,
 }) {
+  console.log('3333', fileItem);
   return (
     <TouchableOpacity
       style={[styles.cell, isSelected && styles.selectedCell, style]}
       onPress={() => onToggleSelect(day, fileItem.id)}>
       <View style={styles.cellRow}>
         <Icon name="folder" size={16} color="#f4c430" />
-        <Text style={styles.cellText}>{fileItem.fileName}</Text>
+        <Text style={styles.cellText}>{fileItem.id}</Text>
       </View>
 
       <View style={styles.cellRow}>
