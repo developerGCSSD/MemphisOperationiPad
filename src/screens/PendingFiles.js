@@ -61,6 +61,7 @@ export default function PendingFiles() {
   useEffect(() => {
     if (selectedDept?.id) {
       dispatch(fetchUnassignedFiles(selectedDept.id));
+      setSelectedFiles([]);
     }
   }, [selectedDept, dispatch]);
 
@@ -87,25 +88,33 @@ export default function PendingFiles() {
       files: filteredFiles, // ✅ only files for that day
       selectedFiles,
       toggleFileSelection,
+      selectedDeptId: selectedDept?.id,
     });
   };
 
   const toggleFileSelection = (day, fileId) => {
-    const key = `${day.date}-${fileId}`;
-    setSelectedFiles(prev =>
-      prev.includes(key) ? prev.filter(id => id !== key) : [...prev, key],
-    );
+    if (!fileId) {
+      return;
+    } // Don't add if fileId is null or undefined
+
+    setSelectedFiles(prev => {
+      const exists = prev.find(f => f.id === fileId && f.date === day.date);
+      if (exists) {
+        return prev.filter(f => !(f.id === fileId && f.date === day.date));
+      } else {
+        return [...prev, {id: fileId, date: day.date}];
+      }
+    });
   };
 
   const isSelected = (day, fileId) => {
-    const key = `${day.date}-${fileId}`;
-    return selectedFiles.includes(key);
+    return selectedFiles.some(f => f.id === fileId && f.date === day.date);
   };
 
   const handleNext = () => {
     navigation.navigate('AssignFiles', {
-      selectedFiles,
-      selectedLanguageId: selectedDept?.id,
+      selectedFiles: selectedFiles.map(f => f.id),
+      selectedDeptId: selectedDept?.id,
     });
     console.log('okokokok', selectedFiles, setSelectedDept?.id);
   };
@@ -164,7 +173,11 @@ export default function PendingFiles() {
       />
 
       {/* Calendar View */}
-      <WeeklyCalendar onSelectDate={handleDateSelect} />
+      <WeeklyCalendar
+        onSelectDate={handleDateSelect}
+        startOfWeekFromPending={startOfWeek}
+        selectedDateFromPending={selectedDate}
+      />
 
       {/* {error && <Text style={{color: 'red'}}>Error: {error}</Text>} */}
       {/* Days Navigation */}

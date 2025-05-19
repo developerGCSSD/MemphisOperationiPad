@@ -9,7 +9,6 @@ export default function FilesPerDay({route}) {
   const {day, files} = route.params;
   console.log('44444444444444', files);
   const navigation = useNavigation();
-
   const [selectedDept, setSelectedDept] = useState(null);
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
@@ -20,16 +19,34 @@ export default function FilesPerDay({route}) {
     dispatch(fetchDepartments());
   }, [dispatch]);
 
+  // useEffect(() => {
+  //   if (!loading && departments.length > 0 && !selectedDept) {
+  //     const defaultDept = departments.find(
+  //       dept => dept.name === 'English Eagles Team',
+  //     );
+  //     if (defaultDept) {
+  //       setSelectedDept(defaultDept);
+  //     }
+  //   }
+  // }, [loading, departments, selectedDept]);
+
   useEffect(() => {
     if (!loading && departments.length > 0 && !selectedDept) {
-      const defaultDept = departments.find(
-        dept => dept.name === 'English Eagles Team',
+      const deptFromNav = departments.find(
+        d => d.id === route.params?.selectedDeptId,
       );
-      if (defaultDept) {
-        setSelectedDept(defaultDept);
+      if (deptFromNav) {
+        setSelectedDept(deptFromNav);
+      } else {
+        const fallbackDept = departments.find(
+          d => d.name === 'English Eagles Team',
+        );
+        if (fallbackDept) {
+          setSelectedDept(fallbackDept);
+        }
       }
     }
-  }, [loading, departments, selectedDept]);
+  }, [loading, departments, selectedDept, route.params]);
 
   // --- File selection state ---
   const [selectedFiles, setSelectedFiles] = useState([]);
@@ -44,11 +61,12 @@ export default function FilesPerDay({route}) {
   const isSelected = fileId => selectedFiles.includes(`${day.date}-${fileId}`);
 
   const handleNext = () => {
+    const selectedFileIds = selectedFiles.map(key => key.split('-')[1]); // Extract fileId from "date-fileId"
     navigation.navigate('AssignFiles', {
-      selectedFiles,
-      selectedLanguageId: selectedDept?.id,
+      selectedFiles: selectedFileIds,
+      selectedDeptId: selectedDept?.id,
     });
-    console.log('okokokok', selectedFiles, selectedDept?.id);
+    console.log('Navigating with:', selectedFileIds, selectedDept?.id);
   };
 
   return (

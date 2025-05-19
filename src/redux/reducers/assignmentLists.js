@@ -2,7 +2,7 @@ import {createSlice, createAsyncThunk} from '@reduxjs/toolkit';
 import {retrieveUser} from '../../storage/authData';
 
 // API call to fetch assignment data based on assignment_type using fetch
-const fetchAssignmentList = async (assignmentType, languageId) => {
+const fetchAssignmentList = async (assignmentType, departmentId) => {
   try {
     const user = await retrieveUser();
     console.log('Retrieved user:', user.token);
@@ -10,7 +10,7 @@ const fetchAssignmentList = async (assignmentType, languageId) => {
       JWToken: user.token,
     });
     console.log('type', assignmentType);
-    console.log('languageId', languageId);
+    console.log('departmentId', departmentId);
 
     if (!user?.token) {
       console.error('❌ Token not found');
@@ -18,7 +18,7 @@ const fetchAssignmentList = async (assignmentType, languageId) => {
     }
 
     const response = await fetch(
-      `https://staging.tangramerp.com/api-operation/assignments-list/${assignmentType}/${languageId}`,
+      `https://staging.tangramerp.com/api-operation/assignments-list/${assignmentType}/${departmentId}`,
       {
         method: 'GET',
         headers: {
@@ -44,17 +44,20 @@ const fetchAssignmentList = async (assignmentType, languageId) => {
   }
 };
 
-// Thunk to fetch the assignments list based on assignment_type and languageId
+// Thunk to fetch the assignments list based on assignment_type anddepartmentId
 export const fetchAssignments = createAsyncThunk(
-  'assignments/fetchAssignments',
-  async ({assignmentType, languageId}, {rejectWithValue}) => {
-    try {
-      const data = await fetchAssignmentList(assignmentType, languageId);
-      console.log('ppppppppp', data);
-      return data; // Return the fetched data
-    } catch (error) {
-      return rejectWithValue(error); // Return the error if failed
-    }
+  'assignments/fetch',
+  async ({assignmentType, departmentId}, thunkAPI) => {
+    const response = await fetchAssignmentList(assignmentType, departmentId);
+
+    // Determine key based on assignmentType
+    const key = assignmentType === 'Leader' ? 'Leaders List' : 'Guides List';
+    const rawData = response[key];
+
+    // Log to confirm
+    console.log(`Fetched ${assignmentType}s:`, rawData);
+
+    return {assignmentType, data: rawData};
   },
 );
 
@@ -76,7 +79,7 @@ const assignmentsSlice = createSlice({
       .addCase(fetchAssignments.fulfilled, (state, action) => {
         state.loading = false;
 
-        const transformedData = Object.entries(action.payload).map(
+        const transformedData = Object.entries(action.payload.data).map(
           ([id, name]) => ({id, name: name.trim()}),
         );
 
@@ -88,6 +91,7 @@ const assignmentsSlice = createSlice({
           state.guides = transformedData;
         }
       })
+
       .addCase(fetchAssignments.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
