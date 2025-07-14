@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 /* eslint-disable react-native/no-inline-styles */
 import React, {useState, useEffect} from 'react';
 import {
@@ -7,12 +8,17 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   ScrollView,
+  Alert,
 } from 'react-native';
 import {useRoute, useNavigation} from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import RadioButtonCard from '../components/RadioButtonCard';
 import {useDispatch, useSelector} from 'react-redux';
 import {fetchAssignments} from '../redux/reducers/assignmentLists';
+import {
+  sendBulkAssignment,
+  clearBulkAssignmentState,
+} from '../redux/reducers/bulkAssignment';
 
 export default function AssignLeaderAndGuide() {
   const route = useRoute();
@@ -20,12 +26,24 @@ export default function AssignLeaderAndGuide() {
   const {selectedFiles, selectedDeptId} = route.params;
   const [selectedLeader, setSelectedLeader] = useState(null);
   const [selectedGuide, setSelectedGuide] = useState(null);
-  console.log('Route params:', route.params);
 
   const dispatch = useDispatch();
+
   const {leaders, guides, loading, error} = useSelector(
     state => state.assignments,
   );
+
+  // console.log('Selected Leader ID:', selectedLeader);
+  // console.log(
+  //   'Leaders List:',
+  //   leaders.map(l => l.id),
+  // );
+
+  const {
+    loading: assignLoading,
+    success,
+    error: assignError,
+  } = useSelector(state => state.bulkAssignment);
 
   useEffect(() => {
     dispatch(
@@ -42,8 +60,53 @@ export default function AssignLeaderAndGuide() {
     );
   }, [dispatch, selectedDeptId]);
 
+  useEffect(() => {
+    if (success) {
+      // Find leader and guide names from their IDs
+      const leaderName = selectedLeader?.name || 'N/A';
+      const guideName = selectedGuide?.name || 'N/A';
+
+      // Join file IDs for display
+      const fileIdsText = selectedFiles.join(', ');
+
+      Alert.alert(
+        'Assignment Successful',
+        `Files: ${fileIdsText}\nLeader: ${leaderName}\nGuide: ${guideName}`,
+        [
+          {
+            text: 'OK',
+            onPress: () => {
+              dispatch(clearBulkAssignmentState());
+              navigation.goBack();
+            },
+          },
+        ],
+      );
+    }
+  }, [
+    success,
+    dispatch,
+    navigation,
+    selectedLeader,
+    selectedGuide,
+    selectedFiles,
+    leaders,
+    guides,
+  ]);
+
   console.log('Leaders:', leaders);
   console.log('Guides:', guides);
+  const handleAssign = () => {
+    dispatch(
+      sendBulkAssignment({
+        file_ids: selectedFiles,
+        leader_id: selectedLeader?.id || '',
+        guide_id: selectedGuide?.id || '',
+        driver_id: '',
+        type: 1,
+      }),
+    );
+  };
 
   const isAssignEnabled = selectedLeader !== null || selectedGuide !== null;
 
@@ -103,8 +166,13 @@ export default function AssignLeaderAndGuide() {
               styles.nextButton,
               {backgroundColor: isAssignEnabled ? '#27548A' : '#d3d3d3'},
             ]}
-            disabled={!isAssignEnabled}>
-            <Text style={styles.nextButtonText}>Assign</Text>
+            disabled={!isAssignEnabled || assignLoading}
+            onPress={handleAssign}>
+            {assignLoading ? (
+              <ActivityIndicator color="white" />
+            ) : (
+              <Text style={styles.nextButtonText}>Assign</Text>
+            )}
           </TouchableOpacity>
         </View>
       </ScrollView>
